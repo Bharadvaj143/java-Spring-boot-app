@@ -4,7 +4,55 @@ pipeline {
     stages{
         stage('checkout') {
             steps{
-                git branch: main , url: ''
+                git branch: main , url: 'https://github.com/Bharadvaj143/java-Spring-boot-app.git'
+            }
+        }
+        stage('Build'){
+            steps{
+                sh 'mvn clean package'
+            }
+        }
+        stage('sonarQube analysis') {
+            environment {
+                SONAR_HOST_URL = 'http://172.30.242.84:9000'
+                SONAR_AUTH_TOKEN = credentials('sonar-token')
+            }
+            steps {
+                withcredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_AUTH_TOKEN')]) {
+                    sh "mvn sonar:sonar -Dsonar.projectKey=java-spring-boot-app -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_AUTH_TOKEN}"
+                }
+            }
+        }
+        stage('Build and push docker image') {
+            steps {
+                script {
+                    def imageName = "bharadvajnanepalli/java-spring-boot-app:"
+                    def registry = "docker.io"
+                    def registryCredential = "dockerhub-credentials"
+                    def dockerImage = docker.build(imageName)
+
+                    docker.withRegistry("https://${registry}", registryCredential) {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
+        stage('Update Manifest') {
+            environment {
+                DOCKER_IMAGE = "bharadvajnanepalli/java-spring-boot-app:{${env.BUILD_NUMBER}}"
+                giturl = 'https://github.com/Bharadvaj143/java-Spring-boot-app.git'
+                gitCredentialsId = 'github-credentials'
+                username = credentials('github-credentials').username
+                password = credentials('github-credentials').password
+            }
+            steps {
+                git url: $giturl, credentialsId: $gitCredentialsId
+                git config user.name "$username"
+                git config user.email "bharadvajnanepalli7@gmail.com"
+                sh 'sed -i "s|image:.*|image: {$DOCKER_IMAGE}|g" k8s/manifest.yaml'
+                git add k8s/manifest.yaml
+                git commit -m "Update manifest with new image version ${env.BUILD_NUMBER}"
+                git push origin $giturl head:main
             }
         }
     }
