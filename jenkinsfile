@@ -52,7 +52,7 @@ pipeline {
                 sh 'sed -i "s|image:.*|image: {$DOCKER_IMAGE}|g" k8s/manifest.yaml'
                 git add .
                 git commit -m "Update manifest with new image version ${env.BUILD_NUMBER}"
-                git push origin $giturl head:main
+                git push origin ${giturl} head:main
             }
         }
     }
