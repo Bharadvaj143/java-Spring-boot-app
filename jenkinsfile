@@ -41,18 +41,22 @@ pipeline {
             environment {
                 DOCKER_IMAGE = "bharadvajnanepalli/java-spring-boot-app:${env.BUILD_NUMBER}"
                 giturl = 'https://github.com/Bharadvaj143/java-Spring-boot-app.git'
+                GIT_REPO_NAME
                 gitCredentialsId = 'github-credentials'
-                username = credentials('github-credentials').username
+                GIT_USER_NAME = credentials('github-credentials').username
                 password = credentials('github-credentials').password
             }
             steps {
-                git url: $giturl, credentialsId: $gitCredentialsId
-                git config user.name "$username"
-                git config user.email "bharadvajnanepalli7@gmail.com"
-                sh 'sed -i "s|image:.*|image: {$DOCKER_IMAGE}|g" k8s/manifest.yaml'
-                git add .
-                git commit -m "Update manifest with new image version ${env.BUILD_NUMBER}"
-                git push origin ${giturl} head:main
+                withCredentials([string(credentialsId: gitCredentialsId, variable: 'GITHUB_TOKEN')]) {
+                    sh """
+                        git config user.name "${username}"
+                        git config user.email "bharadvajnanepalli7@gmail.com"
+                        sed -i "s|image:.*|image: ${DOCKER_IMAGE}|g" k8s/manifest.yaml
+                        git add .
+                        git commit -m "Update manifest with new image version ${env.BUILD_NUMBER}"
+                        git push ${giturl} HEAD:main
+                    """
+                }
             }
         }
     }
