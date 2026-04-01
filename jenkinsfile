@@ -41,16 +41,15 @@ pipeline {
             environment {
                 DOCKER_IMAGE = "bharadvajnanepalli/java-spring-boot-app:${env.BUILD_NUMBER}"
                 giturl = 'https://github.com/Bharadvaj143/java-Spring-boot-app.git'
-                GIT_REPO_NAME
                 gitCredentialsId = 'github-credentials'
-                GIT_USER_NAME = credentials('github-credentials').username
-                password = credentials('github-credentials').password
+                git_username = 'bharadvaj143'
+                git_email = 'bharadvajnanepalli7@gmail.com'
             }
             steps {
                 withCredentials([string(credentialsId: gitCredentialsId, variable: 'GITHUB_TOKEN')]) {
                     sh """
-                        git config user.name "${username}"
-                        git config user.email "bharadvajnanepalli7@gmail.com"
+                        git config user.name ${git_username}
+                        git config user.email ${git_email}
                         sed -i "s|image:.*|image: ${DOCKER_IMAGE}|g" k8s/manifest.yaml
                         git add .
                         git commit -m "Update manifest with new image version ${env.BUILD_NUMBER}"
