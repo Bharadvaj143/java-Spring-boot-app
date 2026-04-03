@@ -23,7 +23,7 @@ pipeline {
                 //SONAR_AUTH_TOKEN = credentials('sonar-token')
             }
             steps {
-                withCredentials([string(credentialsId: 'sonarqube, variable: 'SONAR_AUTH_TOKEN')]) {
+                withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
                     sh "mvn sonar:sonar -Dsonar.projectKey=java-spring-boot-app -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_AUTH_TOKEN}"
                 }
             }
