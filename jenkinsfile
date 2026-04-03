@@ -1,10 +1,14 @@
 pipeline {
-    agent any
-
+    agent {
+        docker {
+            image 'abhishekf5/maven-abhishek-docker-agent:v1'
+            args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // mount Docker socket to access the host's Docker daemon
+        }
+    }
     stages{
         stage('checkout') {
             steps{
-                echo 'Checking out code from GitHub repository...'
+        	    sh 'echo passed'
                 //git branch: main , url: 'https://github.com/Bharadvaj143/java-Spring-boot-app.git'
             }
         }
@@ -13,26 +17,27 @@ pipeline {
                 sh 'mvn clean package'
             }
         }
-        stage('sonarQube analysis') {
+        stage('Static Code Analysis') {
             environment {
                 SONAR_HOST_URL = 'http://172.30.242.84:9000'
                 //SONAR_AUTH_TOKEN = credentials('sonar-token')
             }
             steps {
-                withcredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_AUTH_TOKEN')]) {
+                withCredentials([string(credentialsId: 'sonarqube, variable: 'SONAR_AUTH_TOKEN')]) {
                     sh "mvn sonar:sonar -Dsonar.projectKey=java-spring-boot-app -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_AUTH_TOKEN}"
                 }
             }
         }
         stage('Build and push docker image') {
+            environment {
+                DOCKER_IMAGE = "bharadvajnanepalli/cicd-spring-boot-app:${BUILD_NUMBER}"
+	            REGISTRY_CREDENTIALS = credentials('docker-cred')
+            }
             steps {
                 script {
-                    def imageName = "bharadvajnanepalli/java-spring-boot-app:"
-                    def registry = "docker.io"
-                    def registryCredential = "dockerhub-credentials"
-                    def dockerImage = docker.build(imageName)
-
-                    docker.withRegistry("https://${registry}", registryCredential) {
+            	    sh 'docker build -t ${DOCKER_IMAGE} .'
+	                def dockerImage = docker.image("${DOCKER_IMAGE}")
+	                docker.withRegistry("https://index.docker.io/v1/", "docker-cred") {
                         dockerImage.push()
                     }
                 }
@@ -40,21 +45,22 @@ pipeline {
         }
         stage('Update Manifest') {
             environment {
-                DOCKER_IMAGE = "bharadvajnanepalli/java-spring-boot-app:${env.BUILD_NUMBER}"
+                DOCKER_IMAGE = "bharadvajnanepalli/cicd-spring-boot-app:${BUILD_NUMBER}"
                 giturl = 'https://github.com/Bharadvaj143/java-Spring-boot-app.git'
-                gitCredentialsId = 'github-credentials'
-                git_username = 'bharadvaj143'
-                git_email = 'bharadvajnanepalli7@gmail.com'
+                GIT_USER_NAME = 'bharadvaj143'
+                GIT_EMAIL = 'bharadvajnanepalli7@gmail.com'
+		        GIT_REPO_NAME = "java-Spring-boot-app"
             }
             steps {
-                withCredentials([string(credentialsId: gitCredentialsId, variable: 'GITHUB_TOKEN')]) {
+                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     sh """
-                        git config user.name ${git_username}
-                        git config user.email ${git_email}
+                        git config user.name ${GIT_USER_NAME}
+                        git config user.email ${GIT_EMAIL}
+			            BUILD_NUMBER=${BUILD_NUMBER}
                         sed -i "s|image:.*|image: ${DOCKER_IMAGE}|g" k8s/manifest.yaml
-                        git add .
-                        git commit -m "Update manifest with new image version ${env.BUILD_NUMBER}"
-                        git push ${giturl} HEAD:main
+                        git add k8s/deployment.yml
+	                    git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+	                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
                     """
                 }
             }
