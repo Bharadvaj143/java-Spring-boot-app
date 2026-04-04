@@ -1,4 +1,4 @@
-# 🚀 Ultimate CI/CD Pipeline: Jenkins + ArgoCD + Kubernetes
+# 🚀 Ultimate CI/CD Pipeline: Jenkins + Docker + Shell Scripting + ArgoCD + Kubernetes
 
 > End-to-End CI/CD pipeline using Jenkins, SonarQube, Docker, ArgoCD and Kubernetes — based on [Abhishek Veeramalla's](https://www.youtube.com/@AbhishekVeeramalla) project.
 
@@ -138,15 +138,22 @@ openjdk version "17.x.x"
 ### Step 2: Add Jenkins Repository & Install
 
 ```bash
-curl -fsSL https://pkg.jenkins.io/debian/jenkins.io-2023.key | sudo tee \
-  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+# Remove any old Jenkins keys and repo if present
+sudo rm -f /usr/share/keyrings/jenkins-keyring.gpg
+sudo rm -f /usr/share/keyrings/jenkins-keyring.asc
+sudo rm -f /etc/apt/sources.list.d/jenkins.list
 
-echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
-  https://pkg.jenkins.io/debian binary/ | sudo tee \
-  /etc/apt/sources.list.d/jenkins.list > /dev/null
+# Import Jenkins GPG key
+sudo gpg --keyserver keyserver.ubuntu.com --recv-keys 7198F4B714ABFC68
+sudo gpg --export 7198F4B714ABFC68 | sudo tee /usr/share/keyrings/jenkins-keyring.gpg > /dev/null
 
-sudo apt-get update
-sudo apt-get install jenkins -y
+# Add Jenkins stable repository
+echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.gpg] https://pkg.jenkins.io/debian-stable binary/" | \
+  sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+# Install Jenkins
+sudo apt update
+sudo apt install jenkins -y
 ```
 
 ### Step 3: Start Jenkins
