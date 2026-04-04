@@ -18,6 +18,6 @@ spec:
       - name: spring-boot-app
         labels:
           app: spring-boot-app
-        image: my-image:latest
+        image: bharadvajnanepalli/cicd-spring-boot-app:9
         ports:
         - containerPort: 8080
