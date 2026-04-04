@@ -1,18 +1,6 @@
 # 🚀 Ultimate CI/CD Pipeline: Jenkins + Docker + Shell Scripting + ArgoCD + Kubernetes
 
 > End-to-End CI/CD pipeline using Jenkins, SonarQube, Docker, ArgoCD and Kubernetes — based on [Abhishek Veeramalla's](https://www.youtube.com/@AbhishekVeeramalla) project.
-
-<p align="center">
-  <img src="https://www.jenkins.io/images/logos/jenkins/jenkins.png" alt="Jenkins" width="70"/>
-  &nbsp;&nbsp;
-  <img src="https://assets-eu-01.kc-usercontent.com/b1fd0f40-e06a-00d2-e703-b27a4571a94e/e1e94a3c-7994-4cc9-ab90-cb34aed39602/sonarqube-logo.png" alt="SonarQube" width="200"/>
-  &nbsp;&nbsp;
-  <img src="https://www.docker.com/wp-content/uploads/2022/03/vertical-logo-monochromatic.png" alt="Docker" width="70"/>
-  &nbsp;&nbsp;
-  <img src="https://argo-cd.readthedocs.io/en/stable/assets/logo.png" alt="ArgoCD" width="70"/>
-  &nbsp;&nbsp;
-  <img src="https://upload.wikimedia.org/wikipedia/commons/3/39/Kubernetes_logo_without_workmark.svg" alt="Kubernetes" width="70"/>
-</p>
 ---
 
 ## 📋 Table of Contents
