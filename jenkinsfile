@@ -7,7 +7,7 @@ pipeline {
         
     }*/
         agent any
-        
+
     stages{
         stage('checkout') {
             steps{
@@ -60,8 +60,8 @@ pipeline {
                         git config user.name ${GIT_USER_NAME}
                         git config user.email ${GIT_EMAIL}
 			            BUILD_NUMBER=${BUILD_NUMBER}
-                        sed -i "s|image:.*|image: ${DOCKER_IMAGE}|g" k8s/manifest.yaml
-                        git add k8s/deployment.yml
+                        sed -i "s|image:.*|image: ${DOCKER_IMAGE}|g" k8s/deployment.yaml
+                        git add k8s/deployment.yaml
 	                    git commit -m "Update deployment image to version ${BUILD_NUMBER}"
 	                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
                     """
