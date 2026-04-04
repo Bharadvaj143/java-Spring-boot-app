@@ -468,10 +468,24 @@ sudo install minikube-linux-amd64 /usr/local/bin/minikube
 minikube version
 ```
 
-### Step 5: Start Minikube
+### Step 5: Start Docker Before Minikube (Important for WSL2)
+
+Always start Docker first before starting Minikube in WSL2:
+```bash
+sudo service docker start
+sudo chmod 666 /var/run/docker.sock
+```
+
+Verify Docker is running:
+```bash
+docker ps
+```
+Should return an empty table with no errors.
+
+### Step 6: Start Minikube
 
 ```bash
-minikube start --driver=docker
+minikube start --driver=docker --cpus=2 --memory=4096
 ```
 
 Expected output:
@@ -482,7 +496,7 @@ Expected output:
 ✅  Done! kubectl is now configured
 ```
 
-### Step 6: Verify Cluster
+### Step 7: Verify Cluster
 
 ```bash
 minikube status
@@ -491,15 +505,29 @@ kubectl get nodes
 
 Expected:
 ```
+minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+
 NAME       STATUS   ROLES           AGE   VERSION
 minikube   Ready    control-plane   1m    v1.x.x
 ```
 
-> ⚠️ **Troubleshooting WSL2 Docker Socket Error**
-> If you see `dial unix /var/run/docker.sock: no such file or directory`:
+> ⚠️ **If you see `kubelet: Stopped` and `apiserver: Stopped`**, the Kubernetes components crashed. Fix it with:
 > ```bash
+> # Step 1: Delete the broken cluster
+> minikube stop
+> minikube delete
+>
+> # Step 2: Start Docker first
 > sudo service docker start
 > sudo chmod 666 /var/run/docker.sock
+>
+> # Step 3: Start fresh with enough resources
+> minikube start --driver=docker --cpus=2 --memory=4096
 > ```
 
 ---
