@@ -1,6 +1,19 @@
-# 🚀 Ultimate CI/CD Pipeline: Jenkins + Docker + Shell Scripting + ArgoCD + Kubernetes
+# 🚀 Ultimate CI/CD Pipeline: Jenkins + ArgoCD + Kubernetes
 
 > End-to-End CI/CD pipeline using Jenkins, SonarQube, Docker, ArgoCD and Kubernetes — based on [Abhishek Veeramalla's](https://www.youtube.com/@AbhishekVeeramalla) project.
+
+<p align="center">
+  <img src="https://www.jenkins.io/images/logos/jenkins/jenkins.png" alt="Jenkins" width="70"/>
+  &nbsp;&nbsp;
+  <img src="https://assets-eu-01.kc-usercontent.com/b1fd0f40-e06a-00d2-e703-b27a4571a94e/e1e94a3c-7994-4cc9-ab90-cb34aed39602/sonarqube-logo.png" alt="SonarQube" width="200"/>
+  &nbsp;&nbsp;
+  <img src="https://www.docker.com/wp-content/uploads/2022/03/vertical-logo-monochromatic.png" alt="Docker" width="70"/>
+  &nbsp;&nbsp;
+  <img src="https://argo-cd.readthedocs.io/en/stable/assets/logo.png" alt="ArgoCD" width="70"/>
+  &nbsp;&nbsp;
+  <img src="https://upload.wikimedia.org/wikipedia/commons/3/39/Kubernetes_logo_without_workmark.svg" alt="Kubernetes" width="70"/>
+</p>
+
 ---
 
 ## 📋 Table of Contents
@@ -16,6 +29,8 @@
 - [Part 6: Minikube Setup (WSL2)](#-part-6-minikube-setup-wsl2)
 - [Part 7: ArgoCD Installation](#-part-7-argocd-installation)
 - [Part 8: Pipeline Flow](#-part-8-pipeline-flow)
+- [Part 9: Access the Application](#-part-9-access-the-application)
+- [Credits](#-credits)
 
 ---
 
@@ -117,6 +132,10 @@ ssh -i your-key.pem ubuntu@<EC2-PUBLIC-IP>
 
 ## 🔧 Part 2: Jenkins Installation
 
+<p align="center">
+  <img src="https://www.jenkins.io/images/logos/jenkins/jenkins.png" alt="Jenkins" width="120"/>
+</p>
+
 ### Step 1: Install Java (required by Jenkins)
 
 ```bash
@@ -183,6 +202,10 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 ---
 
 ## 🐳 Part 3: Docker Installation
+
+<p align="center">
+  <img src="https://www.docker.com/wp-content/uploads/2022/03/vertical-logo-monochromatic.png" alt="Docker" width="120"/>
+</p>
 
 > ⚠️ Do NOT use `sudo apt install docker.io` on Ubuntu 24.04 — it is broken. Use the official Docker method below.
 
@@ -271,6 +294,10 @@ Or via browser: `http://<EC2-PUBLIC-IP>:8080/restart`
 ---
 
 ## 📊 Part 4: SonarQube Installation
+
+<p align="center">
+  <img src="https://assets-eu-01.kc-usercontent.com/b1fd0f40-e06a-00d2-e703-b27a4571a94e/e1e94a3c-7994-4cc9-ab90-cb34aed39602/sonarqube-logo.png" alt="SonarQube" width="250"/>
+</p>
 
 ### Step 1: Create SonarQube User
 
@@ -427,6 +454,12 @@ Click **Save**
 
 ## 🖥️ Part 6: Minikube Setup (WSL2)
 
+<p align="center">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/3/39/Kubernetes_logo_without_workmark.svg" alt="Kubernetes" width="100"/>
+  &nbsp;&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/kubernetes/minikube/master/site/static/images/logo/logo.png" alt="Minikube" width="200"/>
+</p>
+
 ### Step 1: Enable WSL2 on Windows
 
 Open PowerShell as Administrator:
@@ -533,6 +566,10 @@ minikube   Ready    control-plane   1m    v1.x.x
 
 ## 🔄 Part 7: ArgoCD Installation
 
+<p align="center">
+  <img src="https://argo-cd.readthedocs.io/en/stable/assets/logo.png" alt="ArgoCD" width="120"/>
+</p>
+
 ### Step 1: Create ArgoCD Namespace
 
 ```bash
@@ -574,24 +611,30 @@ Copy this password.
 kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
 
-Open browser: `https://localhost:8080`
+Open browser: `https://localhost:8081`
 
 ```
 Username: admin
 Password: <output from Step 4>
 ```
 
+> 💡 On first load you will see the ArgoCD dashboard — **"Let's get stuff deployed!"**
+
+<p align="center">
+  <img src="https://argo-cd.readthedocs.io/en/stable/assets/argocd-ui.gif" alt="ArgoCD UI" width="700"/>
+</p>
+
 ### Step 6: Create ArgoCD Application
 
 In ArgoCD UI → **New App**:
 
 ```
-Application Name:  spring-boot-app
+Application Name:  spring-app-cd
 Project:           default
 Sync Policy:       Automatic ✅
-Repository URL:    https://github.com/<your-username>/java-Spring-boot-app
+Repository URL:    https://github.com/Bharadvaj143/java-Spring-boot-app
 Revision:          HEAD
-Path:              spring-boot-app-manifests/
+Path:              k8s
 Cluster URL:       https://kubernetes.default.svc
 Namespace:         default
 ```
@@ -628,6 +671,124 @@ Once everything is set up, the full automated flow is:
 
 ---
 
+## 🌐 Part 9: Access the Application
+
+Once ArgoCD deploys the app to Minikube, follow these steps to access it.
+
+### Step 1: Verify Deployment is Running
+
+```bash
+kubectl get pods -A
+kubectl get svc -A
+```
+
+Expected output:
+```
+NAMESPACE   NAME                      TYPE        CLUSTER-IP      PORT(S)        AGE
+argocd      spring-boot-app-service   NodePort    10.98.184.165   80:30404/TCP   14m
+default     kubernetes                ClusterIP   10.96.0.1       443/TCP        26m
+```
+
+> ⚠️ **Important:** ArgoCD deploys the app in the **`argocd` namespace** by default,
+> not the `default` namespace. Always use `-n argocd` in your commands.
+
+---
+
+### Step 2: List All Services to Find Correct Name & Namespace
+
+```bash
+minikube service list
+```
+
+This gives a clean table showing all services and their namespaces:
+```
+|-------------|--------------------------|-------------|-----|
+|  NAMESPACE  |          NAME            | TARGET PORT | URL |
+|-------------|--------------------------|-------------|-----|
+| argocd      | spring-boot-app-service  | http/80     |     |
+| default     | kubernetes               | No node port |    |
+|-------------|--------------------------|-------------|-----|
+```
+
+---
+
+### Step 3: Get the Access URL
+
+#### Option 1: Minikube Service URL with Namespace ✅
+```bash
+minikube service spring-boot-app-service -n argocd --url
+```
+Open the printed URL in your browser.
+
+#### Option 2: Get Minikube IP + NodePort
+```bash
+minikube ip
+```
+Then open in browser:
+```
+http://<minikube-ip>:30404
+```
+
+#### Option 3: Auto Open in Browser
+```bash
+minikube service spring-boot-app-service -n argocd
+```
+This automatically opens the app in your Windows browser 🚀
+
+---
+
+### Step 4: If Browser Doesn't Open on WSL2
+
+Use port-forward as fallback:
+```bash
+kubectl port-forward svc/spring-boot-app-service -n argocd 9090:80
+```
+Then open:
+```
+http://localhost:9090
+```
+
+---
+
+### ⚠️ Common Error & Fix
+
+**Error:**
+```
+❌ Exiting due to SVC_NOT_FOUND: Service 'spring-boot-app-service'
+   was not found in 'default' namespace.
+```
+
+**Cause:** ArgoCD deployed the service in `argocd` namespace, not `default`.
+
+**Fix:** Always specify the namespace:
+```bash
+# Wrong ❌
+minikube service spring-boot-app-service --url
+
+# Correct ✅
+minikube service spring-boot-app-service -n argocd --url
+```
+
+To fix this permanently, update your ArgoCD app:
+- ArgoCD UI → Your App → **App Details** → Edit
+- Change **Namespace**: `argocd` → `default`
+- Click **Save** → **Sync**
+
+---
+
+### 🧠 Your Service Details
+
+| Field | Value |
+|---|---|
+| Service Name | `spring-boot-app-service` |
+| Namespace | `argocd` |
+| Type | `NodePort` |
+| Cluster IP | `10.98.184.165` |
+| Internal Port | `80` |
+| External NodePort | `30404` |
+
+---
+
 ## 📚 References
 
 - 📺 [Theory Video - Abhishek Veeramalla](https://www.youtube.com/watch?v=jNPGo6A4VHc)
@@ -639,8 +800,57 @@ Once everything is set up, the full automated flow is:
 
 ---
 
+## 🙌 Credits
+
+This project is fully inspired by and built upon the teachings of **Abhishek Veeramalla**.
+
+<p align="center">
+  <img src="https://avatars.githubusercontent.com/u/43399466?v=4" alt="Abhishek Veeramalla" width="100" style="border-radius:50%"/>
+</p>
+
+<p align="center">
+  <b>Abhishek Veeramalla</b><br/>
+  GitOps Product Lead at Red Hat | 500K+ YouTube Subscribers<br/>
+  Argo Project Contributor | Docker Captain | AWS Community Builder
+</p>
+
+<p align="center">
+  <a href="https://www.youtube.com/@AbhishekVeeramalla">
+    <img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube"/>
+  </a>
+  &nbsp;
+  <a href="https://github.com/iam-veeramalla">
+    <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"/>
+  </a>
+  &nbsp;
+  <a href="https://www.linkedin.com/in/abhishek-veeramalla">
+    <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"/>
+  </a>
+</p>
+
+> 💡 Huge thanks to **Abhishek Veeramalla** for his incredible free DevOps content.
+> If this project helped you, go subscribe to his
+> [YouTube channel](https://www.youtube.com/@AbhishekVeeramalla) and give a ⭐ to his
+> [original repo](https://github.com/iam-veeramalla/Jenkins-Zero-To-Hero)!
+
+---
+
 ## 👨‍💻 Author
 
-Project replicated from **Abhishek Veeramalla's** DevOps tutorial series.
+<p align="center">
+  <b>Bharadvaj143</b><br/>
+  DevOps Learner | CI/CD Enthusiast
+</p>
 
-⭐ If this helped you, please star the repository!
+<p align="center">
+  <a href="https://github.com/Bharadvaj143">
+    <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"/>
+  </a>
+</p>
+
+> 📌 This project was built by following Abhishek Veeramalla's tutorial series as a hands-on learning exercise.
+> Every step from Jenkins setup to ArgoCD GitOps deployment was implemented and documented personally.
+
+---
+
+⭐ If this helped you, please **star the repository** and **share it** with others learning DevOps!
