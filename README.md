@@ -140,7 +140,7 @@ ssh -i your-key.pem ubuntu@<EC2-PUBLIC-IP>
 
 ```bash
 sudo apt update
-sudo apt install openjdk-17-jre -y
+sudo apt install openjdk-21-jre -y
 ```
 
 Verify:
@@ -150,7 +150,7 @@ java -version
 
 Expected output:
 ```
-openjdk version "17.x.x"
+openjdk version "21.x.x"
 ```
 
 ### Step 2: Add Jenkins Repository & Install
